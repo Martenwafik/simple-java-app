@@ -1,34 +1,59 @@
-pipeline{
-    agent{
-        label 'aws-agent'
+pipeline {
+    agent {
+        label any
     }
-    stages{
-        stage('build'){
-            steps{
-                script{
+    stages {
+        // 1. Build Java App
+        stage('build app') {
+            steps {
+                script {
+                    // بنعمل Build للكود ونطلع الـ .jar file من غير ما نشغل الـ tests مؤقتاً
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        // 2. Test Java App
+        stage('test') {
+            steps {
+                script {
+                    // بنشغل الـ tests الخاصة بالتطبيق
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        // 3. Build Docker Image
+        stage('build image') {
+            steps {
+                script {
                     sh 'docker build -t java-app .'
                 }
             }
         }
 
-        stage('push'){
-            steps{
-                script{
+        // 4. Push to DockerHub
+        stage('push dockerhub') {
+            steps {
+                script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'Password', usernameVariable: 'Username')]) {
-                    sh 'docker login --username $Username --password $Password'
-                    sh 'docker tag java-app $Username/java-app'
-                    sh 'docker push $Username/java-app'
+                        sh 'docker login --username $Username --password $Password'
+                        
+                        // يفضل نستخدم اسم الـ Repo الأصلي بتاعك في التاج
+                        sh 'docker tag java-app $Username/simple-java-app:latest'
+                        sh 'docker push $Username/simple-java-app:latest'
                     }
                 }
             }
         }
 
-        stage('deploy'){
-            steps{
-                script{
+        // 5. Deploy to AWS EKS
+        stage('deploy') {
+            steps {
+                script {
                     withAWS(credentials: 'aws-cli', region: 'us-east-2') {
-                    sh 'aws eks update-kubeconfig --region us-east-2 --name eks'
-                    sh 'kubectl apply -f ./k8s/deployment.yaml'
+                        sh 'aws eks update-kubeconfig --region us-east-2 --name eks'
+                        sh 'kubectl apply -f ./k8s/deployment.yaml'
                     }
                 }
             }
