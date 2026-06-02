@@ -1,6 +1,9 @@
 pipeline {
   
         agent any
+    tools {
+        maven 'maven3' // لازم يكون نفس الاسم اللي كتبته في الإعدادات بالظبط
+    }
     
     stages {
         // 1. Build Java App
