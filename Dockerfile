@@ -1,8 +1,11 @@
-FROM maven:3.6.3-jdk-11-slim
-COPY src /app/src
-COPY pom.xml /app
-RUN mvn -f /app/pom.xml clean package
+# استخدام صورة جافا 17 خفيفة وسريعة
+FROM eclipse-temurin:17-jre-alpine
 
-RUN mv /app/target/*.jar app.jar
+# تحديد مسار العمل جوة الكونتينر
+WORKDIR /app
 
-ENTRYPOINT ["java","-jar","/app.jar"]
+# نقل ملف الـ jar اللي Jenkins لسه عامله لداخل الكونتينر
+COPY target/*.jar app.jar
+
+# تشغيل التطبيق
+ENTRYPOINT ["java", "-jar", "app.jar"]
