@@ -1,6 +1,6 @@
 pipeline {
   
-        label any
+        agent any
     
     stages {
         // 1. Build Java App
