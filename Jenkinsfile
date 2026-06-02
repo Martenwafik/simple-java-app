@@ -1,7 +1,7 @@
 pipeline {
-    agent {
+  
         label any
-    }
+    
     stages {
         // 1. Build Java App
         stage('build app') {
